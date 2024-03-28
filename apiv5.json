@@ -1,0 +1,870 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OAuth2.0 V5 - Authentication - auth embedded",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://webdev.photocert.co.uk"
+    }
+  ],
+  "paths": {
+    "/api/5/media_upload": {
+      "post": {
+        "tags": [
+          "default"
+        ],
+        "summary": "Media Upload",
+        "description": "### **Use Case**\n\nAfter successfully completing the Authentication request and obtaining a token, you can upload media files for authentication. Each request allows the upload of only one media file. Supported formats: JPEG, JPG, PNG, and PDF.\nSupplementary information can be included for analysis, contributing to grouping images under a single `event.id`. The API calculates the authenticity of the overall event considering individual media results.\nUpon successful upload, receive an `event.id` and a unique `media.id` for retrieving media authentication results.\n\n### **Attributes**\n\n- `file`: mandatory bytes - The media file to upload. Maximum file size: 20 MB, maximum name length: 64 characters.\n- `customerEventId`: optional string - ID to group different media files sent through multiple requests. Event authentication considers all related media files.\n- `referenceDate`: optional string - Date for authenticity analysis, compared with media file metadata. Format: YYYY-MM-DDThh:mm:ssZ. Each media file under the same **event.id** must have its own **referenceDate**.\n- `referenceGps`: optional string - GPS for authenticity analysis, compared with media file metadata. Format: decimal degrees (e.g., 41.40338, 2.17403). Each media file under the same **event.id** must have its own **referenceGps**.\n- `customerMetadata`: optional Dictionary -   [\"claimDate' (mandatory): string, ISO_8601 Standard and YYYY-MM-DDTHH:MM:SSZ format   \"insuranceInternalId\" (mandatory): string, AXA claim reference   \"policyNumber\" (optional): string,   \"vehicleNumberPlate' (optional but policyNumber required): string - `customerEventType`: optional string - Type of event (e.g., claim, underwriting, energy inspections). This attribute groups data for easier presentation on Photocert's dashboard.\n- `customerMediaSource`: optional string - Type of media source (e.g., app source, web source, third-party provider).\n- `customerMediaType`: optional string - Type of media (e.g., car, invoice).",
+        "parameters": [
+          {
+            "name": "x-amz-meta-referenceDate",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "format": "yyyy-MM-dd'T'HH:mm:ss'Z'"
+            },
+            "example": "2023-11-14T12:00:00Z"
+          },
+          {
+            "name": "x-amz-meta-referenceGps",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            },
+            "example": "41.40338,2.17403"
+          },
+          {
+            "name": "x-amz-meta-customerEventId",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            },
+            "example": "event123"
+          },
+          {
+            "name": "x-amz-meta-customerEventType",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            },
+            "example": "claim"
+          },
+          {
+            "name": "x-amz-meta-customerMetadata",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            },
+            "example": {
+              "claimDate": "2023-11-14T12:00:00Z",
+              "insuranceInternalId": "ABC123"
+            }
+          },
+          {
+            "name": "x-amz-meta-customerMediaSource",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            },
+            "example": "app"
+          },
+          {
+            "name": "x-amz-meta-customerMediaType",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            },
+            "example": "car"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "application/pdf": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "oauth2Auth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "The request was successful, and a new resource was created as a result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "responseStatus": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "format": "yyyy-MM-dd'T'HH:mm:ss'Z'"
+                        }
+                      },
+                      "examples": [
+                        {
+                          "id": "123",
+                          "code": "201 CREATED",
+                          "message": "Resource successfully uploaded.",
+                          "timestamp": "2023-11-14T12:30:00Z"
+                        }
+                      ]
+                    },
+                    "event": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "customerEventId": {
+                          "type": "string"
+                        },
+                        "mediaTotal": {
+                          "type": "integer"
+                        },
+                        "customerEventType": {
+                          "type": "string"
+                        },
+                        "customerMetadata": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "examples": [
+                        {
+                          "id": "23afb227-18dd-4ae3-ba6f-126231c94724",
+                          "customerEventId": "event123",
+                          "mediaTotal": 1,
+                          "customerEventType": "claim"
+                        }
+                      ]
+                    },
+                    "media": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "referenceDate": {
+                          "type": "string"
+                        },
+                        "uploadDate": {
+                          "type": "string"
+                        },
+                        "ipAddress": {
+                          "type": "string"
+                        },
+                        "customerMediaSource": {
+                          "type": "string"
+                        },
+                        "customerMediaType": {
+                          "type": "string"
+                        },
+                        "referenceGps": {
+                          "type": "object",
+                          "properties": {
+                            "latitude": {
+                              "type": "number"
+                            },
+                            "longitude": {
+                              "type": "number"
+                            }
+                          },
+                          "examples": [
+                            {
+                              "latitude": 41.40338,
+                              "longitude": 2.17403
+                            }
+                          ]
+                        }
+                      },
+                      "examples": [
+                        {
+                          "id": "5f2f9479-e714-4a94-8729-18d8903cc0ff",
+                          "name": "example.jpg",
+                          "referenceDate": "2023-11-14T12:00:00Z",
+                          "uploadDate": "2023-11-14T12:15:00Z",
+                          "ipAddress": "127.0.0.1",
+                          "customerMediaSource": "app",
+                          "customerMediaType": "car"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request cannot be processed due to invalid syntax or parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "responseStatus": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "format": "yyyy-MM-dd'T'HH:mm:ss'Z'"
+                        }
+                      },
+                      "examples": [
+                        {
+                          "id": "123",
+                          "code": "201 CREATED",
+                          "message": "Resource successfully uploaded.",
+                          "timestamp": "2023-11-14T12:30:00Z"
+                        }
+                      ]
+                    }
+                  },
+                  "examples": [
+                    {
+                      "responseStatus": {
+                        "id": "75fa07fa-a660-4bf0-9a40-14e3a44a7cf6",
+                        "code": "400 BAD_REQUEST",
+                        "message": "Wrong media file extension. Supported extensions: JPEG, JPG, PNG and PDF.",
+                        "timestamp": "2023-11-14T12:45:00Z"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request requires authentication or the provided credentials are invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "responseStatus": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "format": "yyyy-MM-dd'T'HH:mm:ss'Z'"
+                        }
+                      },
+                      "examples": [
+                        {
+                          "id": "123",
+                          "code": "201 CREATED",
+                          "message": "Resource successfully uploaded.",
+                          "timestamp": "2023-11-14T12:30:00Z"
+                        }
+                      ]
+                    }
+                  },
+                  "examples": [
+                    {
+                      "responseStatus": {
+                        "id": "75fa07fa-a660-4bf0-9a40-14e3a44a7cf6",
+                        "code": "401 UNAUTHORIZED",
+                        "message": "Token is not valid.",
+                        "timestamp": "2023-11-14T12:45:00Z"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The customer has no permission to perform the request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "responseStatus": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "format": "yyyy-MM-dd'T'HH:mm:ss'Z'"
+                        }
+                      },
+                      "examples": [
+                        {
+                          "id": "123",
+                          "code": "201 CREATED",
+                          "message": "Resource successfully uploaded.",
+                          "timestamp": "2023-11-14T12:30:00Z"
+                        }
+                      ]
+                    }
+                  },
+                  "examples": [
+                    {
+                      "responseStatus": {
+                        "id": "75fa07fa-a660-4bf0-9a40-14e3a44a7cf6",
+                        "code": "403 FORBIDDEN",
+                        "message": "Customer does not have authorization to access this endpoint.",
+                        "timestamp": "2023-11-14T12:45:00Z"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found on the server.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "responseStatus": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "format": "yyyy-MM-dd'T'HH:mm:ss'Z'"
+                        }
+                      },
+                      "examples": [
+                        {
+                          "id": "123",
+                          "code": "201 CREATED",
+                          "message": "Resource successfully uploaded.",
+                          "timestamp": "2023-11-14T12:30:00Z"
+                        }
+                      ]
+                    }
+                  },
+                  "examples": [
+                    {
+                      "responseStatus": {
+                        "id": "75fa07fa-a660-4bf0-9a40-14e3a44a7cf6",
+                        "code": "404 NOT_FOUND",
+                        "message": "Resource not found",
+                        "timestamp": "2023-11-14T12:45:00Z"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The customer has sent too many requests in a given amount of time.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "responseStatus": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "format": "yyyy-MM-dd'T'HH:mm:ss'Z'"
+                        }
+                      },
+                      "examples": [
+                        {
+                          "id": "123",
+                          "code": "201 CREATED",
+                          "message": "Resource successfully uploaded.",
+                          "timestamp": "2023-11-14T12:30:00Z"
+                        }
+                      ]
+                    }
+                  },
+                  "examples": [
+                    {
+                      "responseStatus": {
+                        "id": "75fa07fa-a660-4bf0-9a40-14e3a44a7cf6",
+                        "code": "429 TOO_MANY_REQUESTS",
+                        "message": "customer has sent too many requests in a given amount of time.",
+                        "timestamp": "2023-11-14T12:45:00Z"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The server has encountered an unexpected error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "responseStatus": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "format": "yyyy-MM-dd'T'HH:mm:ss'Z'"
+                        }
+                      },
+                      "examples": [
+                        {
+                          "id": "123",
+                          "code": "201 CREATED",
+                          "message": "Resource successfully uploaded.",
+                          "timestamp": "2023-11-14T12:30:00Z"
+                        }
+                      ]
+                    }
+                  },
+                  "examples": [
+                    {
+                      "responseStatus": {
+                        "id": "75fa07fa-a660-4bf0-9a40-14e3a44a7cf6",
+                        "code": "500 INTERNAL_SERVER_ERROR",
+                        "message": "The server has encountered an unexpected error.",
+                        "timestamp": "2023-11-14T12:45:00Z"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "oauth2Auth": {
+        "type": "oauth2",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "https://phc-test.auth.eu-west-1.amazoncognito.com/oauth2/token",
+            "scopes": {}
+          }
+        }
+      }
+    },
+    "schemas": {
+      "UploadMediaRequest": {
+        "required": [
+          "file"
+        ],
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary"
+          },
+          "customerEventId": {
+            "type": "string"
+          },
+          "referenceDate": {
+            "type": "string",
+            "format": "yyyy-MM-dd'T'HH:mm:ss'Z'"
+          },
+          "referenceGps": {
+            "type": "string"
+          },
+          "customerMetadata": {
+            "type": "string"
+          },
+          "customerEventType": {
+            "type": "string"
+          },
+          "customerMediaSource": {
+            "type": "string"
+          },
+          "customerMediaType": {
+            "type": "string"
+          }
+        },
+        "examples": [
+          {
+            "file": "base64-encoded-file-content",
+            "customerEventId": "event123",
+            "referenceDate": "2023-11-14T12:00:00Z",
+            "referenceGps": "41.40338,2.17403",
+            "customerMetadata": {
+              "claimDate": "2023-11-14T12:00:00Z",
+              "insuranceInternalId": "AXA123"
+            },
+            "customerEventType": "claim",
+            "customerMediaSource": "app",
+            "customerMediaType": "car"
+          }
+        ]
+      },
+      "UploadMediaResponse": {
+        "type": "object",
+        "properties": {
+          "responseStatus": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "yyyy-MM-dd'T'HH:mm:ss'Z'"
+              }
+            },
+            "examples": [
+              {
+                "id": "123",
+                "code": "201 CREATED",
+                "message": "Resource successfully uploaded.",
+                "timestamp": "2023-11-14T12:30:00Z"
+              }
+            ]
+          },
+          "event": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "customerEventId": {
+                "type": "string"
+              },
+              "mediaTotal": {
+                "type": "integer"
+              },
+              "customerEventType": {
+                "type": "string"
+              },
+              "customerMetadata": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object"
+                }
+              }
+            },
+            "examples": [
+              {
+                "id": "23afb227-18dd-4ae3-ba6f-126231c94724",
+                "customerEventId": "event123",
+                "mediaTotal": 1,
+                "customerEventType": "claim"
+              }
+            ]
+          },
+          "media": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "referenceDate": {
+                "type": "string"
+              },
+              "uploadDate": {
+                "type": "string"
+              },
+              "ipAddress": {
+                "type": "string"
+              },
+              "customerMediaSource": {
+                "type": "string"
+              },
+              "customerMediaType": {
+                "type": "string"
+              },
+              "referenceGps": {
+                "type": "object",
+                "properties": {
+                  "latitude": {
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "type": "number"
+                  }
+                },
+                "examples": [
+                  {
+                    "latitude": 41.40338,
+                    "longitude": 2.17403
+                  }
+                ]
+              }
+            },
+            "examples": [
+              {
+                "id": "5f2f9479-e714-4a94-8729-18d8903cc0ff",
+                "name": "example.jpg",
+                "referenceDate": "2023-11-14T12:00:00Z",
+                "uploadDate": "2023-11-14T12:15:00Z",
+                "ipAddress": "127.0.0.1",
+                "customerMediaSource": "app",
+                "customerMediaType": "car"
+              }
+            ]
+          }
+        }
+      },
+      "EventResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "customerEventId": {
+            "type": "string"
+          },
+          "mediaTotal": {
+            "type": "integer"
+          },
+          "customerEventType": {
+            "type": "string"
+          },
+          "customerMetadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object"
+            }
+          }
+        },
+        "examples": [
+          {
+            "id": "23afb227-18dd-4ae3-ba6f-126231c94724",
+            "customerEventId": "event123",
+            "mediaTotal": 1,
+            "customerEventType": "claim"
+          }
+        ]
+      },
+      "GpsResponse": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          }
+        },
+        "examples": [
+          {
+            "latitude": 41.40338,
+            "longitude": 2.17403
+          }
+        ]
+      },
+      "MediaResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "referenceDate": {
+            "type": "string"
+          },
+          "uploadDate": {
+            "type": "string"
+          },
+          "ipAddress": {
+            "type": "string"
+          },
+          "customerMediaSource": {
+            "type": "string"
+          },
+          "customerMediaType": {
+            "type": "string"
+          },
+          "referenceGps": {
+            "type": "object",
+            "properties": {
+              "latitude": {
+                "type": "number"
+              },
+              "longitude": {
+                "type": "number"
+              }
+            },
+            "examples": [
+              {
+                "latitude": 41.40338,
+                "longitude": 2.17403
+              }
+            ]
+          }
+        },
+        "examples": [
+          {
+            "id": "5f2f9479-e714-4a94-8729-18d8903cc0ff",
+            "name": "example.jpg",
+            "referenceDate": "2023-11-14T12:00:00Z",
+            "uploadDate": "2023-11-14T12:15:00Z",
+            "ipAddress": "127.0.0.1",
+            "customerMediaSource": "app",
+            "customerMediaType": "car"
+          }
+        ]
+      },
+      "StandardResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "yyyy-MM-dd'T'HH:mm:ss'Z'"
+          }
+        },
+        "examples": [
+          {
+            "id": "123",
+            "code": "201 CREATED",
+            "message": "Resource successfully uploaded.",
+            "timestamp": "2023-11-14T12:30:00Z"
+          }
+        ]
+      },
+      "ExceptionResponse": {
+        "type": "object",
+        "properties": {
+          "responseStatus": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "yyyy-MM-dd'T'HH:mm:ss'Z'"
+              }
+            },
+            "examples": [
+              {
+                "id": "123",
+                "code": "201 CREATED",
+                "message": "Resource successfully uploaded.",
+                "timestamp": "2023-11-14T12:30:00Z"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
