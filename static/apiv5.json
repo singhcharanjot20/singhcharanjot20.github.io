@@ -11,7 +11,7 @@
   ],
   "paths": {
     "/api/5/media_upload": {
-      "post": {
+      "put": {
         "tags": [
           "Photocert"
         ],
